@@ -1,0 +1,60 @@
+{
+  "name": "@workadventure/ultimate-json",
+  "version": "1.0.0",
+  "description": "JSON to Class converter with automatic patch tracking",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "/dist"
+  ],
+  "scripts": {
+    "build": "tsc --build",
+    "lint": "eslint --ext .js,.ts .",
+    "lint-fix": "eslint --fix --ext .js,.ts .",
+    "format": "prettier --ignore-path .gitignore --write \"**/*.+(js|ts|json)\"",
+    "format-check": "prettier --ignore-path .gitignore \"**/*.+(js|ts|json)\"",
+    "precommit": "lint-staged",
+    "test": "vitest --config vitest.config.ts ",
+    "test:coverage": "vitest --config vitest.config.ts --coverage -- --verbose=true"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/thecodingmachine/workadventure.git#master"
+  },
+  "keywords": [
+    "json",
+    "serialization"
+  ],
+  "author": "WorkAdventure",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/thecodingmachine/workadventure/issues"
+  },
+  "homepage": "https://github.com/thecodingmachine/workadventure/tree/master/libs/room-api-clients/room-api-client-js#readme",
+  "dependencies": {
+    "@vitest/coverage-c8": "^0.30.1",
+    "rxjs": "^7.8.1",
+    "vitest": "^0.30.1",
+    "zod": "^3.21.4"
+  },
+  "devDependencies": {
+    "@types/node": "^18.15.5",
+    "@typescript-eslint/eslint-plugin": "^5.56.0",
+    "@typescript-eslint/parser": "^5.56.0",
+    "eslint": "^8.36.0",
+    "eslint-config-prettier": "^8.8.0",
+    "lint-staged": "^13.2.0",
+    "prettier": "^2.8.6",
+    "ts-node": "^10.9.1",
+    "ts-proto": "^1.143.0",
+    "typescript": "^5.0.2"
+  },
+  "lint-staged": {
+    "*.{js,ts}": [
+      "eslint --fix"
+    ],
+    "*.{js,ts,json}": [
+      "prettier --write"
+    ]
+  }
+}
