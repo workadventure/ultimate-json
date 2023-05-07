@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
 import {UltimateBase} from "../../src/data-structures/UltimateBase";
-import {field, object, fieldsRegistry} from "../../src/decorators/field";
-import {z} from "zod";
+import {field, object, fieldsRegistry, arrayOf} from "../../src/decorators/field";
+import { z } from "zod";
+import exp from "constants";
+import {UltimateArray} from "../../src/data-structures/UltimateArray";
 
 describe("Field Decorator", () => {
     it("should test", () => {
@@ -33,11 +35,11 @@ describe("Field Decorator", () => {
             @object(Test2)
             public test: Test2;
 
-            /*@arrayOf(Test2)
-            public tests: Test2[] = [];
+            @arrayOf(Test2)
+            public tests: UltimateArray<Test2>;
 
-            @arrayOf(z.string)
-            public strings: string[] = [];*/
+            @arrayOf(z.string())
+            public strings: UltimateArray<string>;
         }
 
         console.log(fieldsRegistry);
@@ -47,7 +49,16 @@ describe("Field Decorator", () => {
             baz: "coucou",
             test: {
                 foo: "string",
-            }
+            },
+            tests: [
+                {
+                    foo: "bar"
+                }
+            ],
+            strings: [
+                "foo",
+                "bar"
+            ]
         });
 
         let onChangeNewValue: number | undefined;
@@ -60,6 +71,14 @@ describe("Field Decorator", () => {
         expect(onChangeNewValue).toBe(40);
         expect(test.foo).toBe(40);
         expect(test.test.foo).toBe("hello");
+        expect(test.tests instanceof UltimateArray).toBe(true);
+        expect(test.tests.length === 1).toBe(true);
+        expect(test.tests[0].foo === "bar").toBe(true);
+        expect(test.strings instanceof UltimateArray).toBe(true);
+        expect(test.strings.length === 2).toBe(true);
+        expect(test.strings[0] === "foo").toBe(true);
+        expect(test.strings[1] === "bar").toBe(true);
+        // TODO: strings
         console.log(test);
         console.log("New foo", test.foo);
 

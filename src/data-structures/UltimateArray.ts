@@ -35,18 +35,33 @@ export class UltimateArray<V> extends Array<V> {
     private createHandler(): ProxyHandler<UltimateArray<V>> {
         return {
             set: (target: UltimateArray<V>, key: string | symbol, value: any): boolean => {
-                if (Number.isInteger(key)) {
+                if (key === "length") {
+                    // Special case: if we set the length to a value lower than the current length, we need to do is if items are deleted.
+                    const oldLength = this.length;
+                    if (value < oldLength) {
+                        for (let i = value; i < oldLength; i++) {
+                            this.deleteSubject.next(i);
+                        }
+                    }
+                    return Reflect.set(target, key, value);
+                }
+
+                const isNumber = /^\d+$/.test(key.toString());
+                if (isNumber) {
                     this.handleItem(value, Number(key));
                 }
                 const result = Reflect.set(target, key, value);
-                if (Number.isInteger(key)) {
+                if (isNumber) {
                     this.insertSubject.next(Number(key));
                 }
                 return result;
             },
             deleteProperty: (target: UltimateArray<V>, key: string | symbol): boolean => {
                 const result = Reflect.deleteProperty(target, key);
-                if (Number.isInteger(key)) {
+                const isNumber = /^\d+$/.test(key.toString());
+                if (isNumber) {
+                    // Note: deleting a property could actually be seen as INSERTING undefined.
+                    // This way, the deleteSubject event can be kept for things that are trigerring renumbering in the array.
                     this.deleteSubject.next(Number(key));
                 }
                 return result;
@@ -96,11 +111,27 @@ export class UltimateArray<V> extends Array<V> {
         return this.deleteSubject.asObservable();
     }
 
-    push(...items: V[]): number {
+    shift(): V | undefined {
+        const item = super.shift();
+        if (item !== undefined) {
+            this.deleteSubject.next(0);
+        }
+        // Let's renumber the items
+        for (let i = 0; i < this.length; i++) {
+            // TODO: decrease position in parent array
+            // Note: rather than renumbering, we could keep a Map inside the UltimateArray mapping the object to the index! (a kind of reverse array)
+            // Or maybe we don't need numbers at all if the event sent provides it?
+        }
+        return item;
+    }
+    // TODO: code unshift
+
+    // Note: push is calling "Proxy.set" under the hood. No need to overwrite it.
+    /*push(...items: V[]): number {
         const oldLength = this.length;
 
-        for (let i = oldLength; i < this.length; i++) {
-            this.handleItem(items[i - oldLength], i);
+        for (let i = 0; i < items.length; i++) {
+            this.handleItem(items[i + oldLength], i);
         }
 
         const number = super.push(...items);
@@ -110,7 +141,7 @@ export class UltimateArray<V> extends Array<V> {
         }
 
         return number;
-    }
+    }*/
 
     private handleItem(item: V, index: number) : V {
         switch (this.field.type) {
@@ -122,7 +153,7 @@ export class UltimateArray<V> extends Array<V> {
             }
             case "scalar": {
                 if (this.field.zodType) {
-                    this.field.zodType.parse(this[i]);
+                    this.field.zodType.parse(item);
                 }
                 return item;
             }
@@ -142,7 +173,7 @@ export class UltimateArray<V> extends Array<V> {
         const array = new UltimateArray<Value>(subField);
 
         const toPushValues = values.map(item => UltimateUtils.fromJsonItem(item, subField));
-        array.push(toPushValues);
+        array.push(...toPushValues);
 
         return array;
     }

@@ -1,5 +1,6 @@
-import {ZodType} from "zod/lib/types";
+import {ZodType} from "zod";
 import {UltimateBase} from "../data-structures/UltimateBase";
+import {UltimateArray} from "../data-structures/UltimateArray";
 
 
 
@@ -205,7 +206,10 @@ export function arrayOf(subType: { new(): UltimateBase }|ZodType|Field|undefined
             fields = new Map();
             fieldsRegistry.set(target.constructor.name, fields);
         }
-        fields.set(propertyKey, normalizedSubfield);
+        fields.set(propertyKey, {
+            type: "array",
+            subField: normalizedSubfield,
+        });
 
         const getter = function() {
             console.log("GETTER");
@@ -215,8 +219,8 @@ export function arrayOf(subType: { new(): UltimateBase }|ZodType|Field|undefined
             // PROPOSAL: FORBID SETTING AN ARRAY. Or only allow the subtype ResponsiveArray THIS WILL HAVE SIDE EFFECTS. INSTEAD, ONLY ALLOW push, etc...
             // The getter can be used
 
-            if (!(newVal instanceof UltimateBase) && newVal !== undefined) {
-                throw new Error(`Values set on ${propertyKey}  must be objects extending UltimateBase`);
+            if (!(newVal instanceof UltimateArray) && newVal !== undefined) {
+                throw new Error(`Values set on ${propertyKey}  must be objects extending UltimateArray`);
             }
 
 
