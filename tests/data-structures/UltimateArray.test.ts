@@ -7,6 +7,7 @@ import {field} from "../../src/decorators/field";
 describe("UltimateArray", () => {
     it("should push items to the array", () => {
         const arr = new UltimateArray<number>({ type: "scalar", zodType: z.number() });
+        arr._disableNotifications = false;
         const insertedIndexes: number[] = [];
         arr.onInsert().subscribe(index => {
             insertedIndexes.push(index);
@@ -21,6 +22,7 @@ describe("UltimateArray", () => {
 
     it("should add items", () => {
         const arr = new UltimateArray<number>({ type: "scalar", zodType: z.number() });
+        arr._disableNotifications = false;
         const insertedIndexes: number[] = [];
         arr.onInsert().subscribe(index => {
             insertedIndexes.push(index);
@@ -33,6 +35,7 @@ describe("UltimateArray", () => {
 
     it("should remove items", () => {
         const arr = new UltimateArray<number>({ type: "scalar", zodType: z.number() });
+        arr._disableNotifications = false;
         let deletedIndexes: number[] = [];
         arr.onDelete().subscribe(index => {
             deletedIndexes.push(index);
@@ -54,6 +57,10 @@ describe("UltimateArray", () => {
         expect(arr[0]).toBe(1);
         expect(arr[1]).toBe(2);
         expect(arr[2]).toBe(3);
+
+        // The fields should not be marked as dirty
+        expect(arr.getDirtyFields().size).toBe(0);
+        expect(arr.getDirtyChildFields().size).toBe(0);
     });
 
     it("should create array using fromJson and attach to objects", () => {
@@ -68,6 +75,10 @@ describe("UltimateArray", () => {
         expect(arr.length).toBe(1);
         expect(arr[0] instanceof Test).toBe(true);
         expect(arr[0].foo).toBe(20);
+
+        // The fields should not be marked as dirty
+        expect(arr.getDirtyFields().size).toBe(0);
+        expect(arr.getDirtyChildFields().size).toBe(0);
     });
 
 });

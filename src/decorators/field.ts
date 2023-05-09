@@ -53,11 +53,10 @@ export function field(zodType: ZodType|undefined) {
         });
 
         const getter = function() {
-            console.log("GETTER");
             return this["___"+propertyKey];
         };
         const setter = function(newVal: unknown) {
-            console.log("SETTER ON ", this, this.__getPath(), "for property", propertyKey, "new value", newVal);
+            //console.log("SETTER ON ", this, this.__getPath(), "for property", propertyKey, "new value", newVal);
             if (!(this instanceof UltimateBase)) {
                 console.log("TARGET NOT INSTANCE OF ULTIMATEBASE");
             }
@@ -135,7 +134,6 @@ export function object(classObj: { new(): UltimateBase }) {
         });
 
         const getter = function() {
-            console.log("GETTER");
             return this["___"+propertyKey];
         };
         const setter = function(newVal: unknown) {
@@ -212,7 +210,6 @@ export function arrayOf(subType: { new(): UltimateBase }|ZodType|Field|undefined
         });
 
         const getter = function() {
-            console.log("GETTER");
             return this["___"+propertyKey];
         };
         const setter = function(newVal: unknown) {

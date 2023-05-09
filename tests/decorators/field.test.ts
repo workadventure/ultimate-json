@@ -79,8 +79,24 @@ describe("Field Decorator", () => {
         expect(test.strings[0] === "foo").toBe(true);
         expect(test.strings[1] === "bar").toBe(true);
         // TODO: strings
-        console.log(test);
-        console.log("New foo", test.foo);
+
+        expect(test.toJson()).toEqual({
+            bar: 3,
+            foo: 40,
+            baz: "coucou",
+            test: {
+                foo: "hello",
+            },
+            tests: [
+                {
+                    foo: "bar"
+                }
+            ],
+            strings: [
+                "foo",
+                "bar"
+            ]
+        });
 
         /*const test1 = new Test1();
         test1.foo = 30;*/

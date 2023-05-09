@@ -18,18 +18,19 @@ export type ConstructorType<T = unknown, Static extends Record<string, any> = Pr
 };
 
 export class UltimateBase {
-    public _disableNotifications = false;
+    // Notifications are enabled only when the object is constructed from "fromJson"
+    public _disableNotifications = true;
 
     private parent: UltimateBase | UltimateArray<unknown> | undefined;
     /**
      * If the object is in an array (in the parent field), this is the position in the array.
      */
-    private positionInParentArray: number | undefined;
+    //private positionInParentArray: number | undefined;
     /**
      * If the object is in a map (in the parent field), this is the key in the map.
      * Note: because this is serializable to JSON, the key is a string.
      */
-    private keyInParentMap: string | undefined;
+    //private keyInParentMap: string | undefined;
     /**
      * If the object is in a property (in the parent field), this is the property that contains the object.
      */
@@ -38,6 +39,9 @@ export class UltimateBase {
     private fieldSubscribers: {
         [K in keyof this ]?: Subject<this[K]>;
     } = {};
+
+    private __dirtyFields: Set<string> = new Set<string>();
+    private __dirtyChildFields: Set<string> = new Set<string>();
 
     /*get __constructorCalled(): boolean {
         return this._constructorCalled;
@@ -48,7 +52,21 @@ export class UltimateBase {
         // TODO: we could implement some decorators here (instead of passing the set to the parent stupidly).
         // and it would be more efficient.
         // Each class could decorate the setters; for each decorators, we would have the matching
-        console.log("Field set", field, value);
+        console.log("Notify field set", field, value);
+
+        this.__dirtyFields.add(field);
+        // We need to notify the parent that a field has changed.
+        if (this.parent !== undefined) {
+            if (this.parent instanceof UltimateBase) {
+                this.parent.__notifyChildSet(this.parentProperty!);
+            } else if (this.parent instanceof UltimateArray<unknown>) {
+                this.parent.__notifyChildSet(this);
+            } else {
+                const _exhaustiveCheck: never = this.parent;
+                throw new Error("Unknown parent type");
+            }
+        }
+
         if (this.fieldSubscribers !== undefined && this.fieldSubscribers[field]) {
             this.fieldSubscribers[field].next(value);
         }
@@ -70,12 +88,12 @@ export class UltimateBase {
         this.parentProperty = parentProperty;
     }
 
-    public __setParentArray(parent: UltimateArray<unknown> | undefined, positionInParentArray: number | undefined): void {
+    public __setParentArray(parent: UltimateArray<unknown> | undefined/*, positionInParentArray: number | undefined*/): void {
         if (parent !== undefined && this.parent !== undefined) {
             throw new Error("Object already has a parent declared.");
         }
         this.parent = parent;
-        this.positionInParentArray = positionInParentArray;
+        //this.positionInParentArray = positionInParentArray;
     }
 
     public __getPath(): string[] {
@@ -92,6 +110,15 @@ export class UltimateBase {
         return path;
     }
 
+    public getDirtyFields(cleanFields = false): Set<string> {
+        let dirtyFields = this.__dirtyFields;
+        if (cleanFields) {
+            this.__dirtyFields = new Set<string>();
+        }
+        return dirtyFields;
+    }
+
+    // TODO: add a notion of "context" here => a class that is passed to each constructors or available from a protected getContext method.
     public static fromJson<T extends UltimateBase>(this: ConstructorType<T, typeof UltimateBase>, json: object): T {
         // this.name is the name of the class statically called.
         console.log(this,this.name, this.constructor.name);
@@ -108,11 +135,50 @@ export class UltimateBase {
             if (json[fieldName] !== undefined) {
                 let value = json[fieldName];
 
-                instance[fieldName] = UltimateUtils.fromJsonItem(value, fieldDescriptor);
+                instance[fieldName] = UltimateUtils.fromJsonItem(value, fieldDescriptor, instance, fieldName);
             }
         }
 
         instance._disableNotifications = false;
         return instance;
+    }
+
+    public toJson(): object {
+        const json: any = {};
+        const fields = fieldsRegistry.get(this.constructor.name);
+        if (fields === undefined) {
+            throw new Error("No @field descriptors found for class '" + this.constructor.name + "'.");
+        }
+        for (const [fieldName, fieldDescriptor] of fields) {
+            const value = this[fieldName];
+            json[fieldName] = UltimateUtils.toJsonItem(value, fieldDescriptor);
+        }
+        return json;
+    }
+
+    public __notifyChildSet(field: string) {
+        this.__dirtyChildFields.add(field);
+        if (this.parent !== undefined) {
+            if (this.parent instanceof UltimateBase) {
+                this.parent.__notifyChildSet(this.parentProperty!);
+            } else if (this.parent instanceof UltimateArray<unknown>) {
+                this.parent.__notifyChildSet(this);
+            } else {
+                const _exhaustiveCheck: never = this.parent;
+                throw new Error("Unknown parent type");
+            }
+        }
+    }
+
+    /**
+     * Returns the fields that are objects/arrays that have children that have been modified.
+     * @param cleanFields If true, the dirty fields are cleared.
+     */
+    public getDirtyChildFields(cleanFields = false): Set<string> {
+        let dirtyFields = this.__dirtyChildFields;
+        if (cleanFields) {
+            this.__dirtyChildFields = new Set<string>();
+        }
+        return dirtyFields;
     }
 }
