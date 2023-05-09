@@ -52,7 +52,7 @@ export function generatePatch(ultimateObj: UltimateBase|UltimateArray<unknown>):
                 patches: generatePatch(value),
             });
         } else {
-            throw new Error("Unknown child type");
+            throw new Error("Unknown child");
         }
     }
 

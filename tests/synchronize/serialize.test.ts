@@ -228,4 +228,95 @@ describe("Serialize", () => {
         const patch2 = generatePatch(test);
         expect(patch2).toEqual([]);
     });
+
+    it("should accept replacing objects", () => {
+        const json = {
+            test: {
+                foo: "string",
+            },
+        };
+
+        const test = Test1.fromJson(json);
+        const test2 = test.test;
+
+        test.test = new Test2();
+        const patch = generatePatch(test);
+        expect(patch).toEqual([{
+            operation: "add",
+            path: "test",
+            value: {
+                foo: 'foo'
+            }
+        }]);
+
+        (test2 as Test2).foo = "bar";
+
+        const patch2 = generatePatch(test);
+        expect(patch2).toEqual([]);
+    });
+
+    it("should track replaced objects", () => {
+        const json = {
+            test: {
+                foo: "string",
+            },
+        };
+
+        const test = Test1.fromJson(json);
+
+        test.test = new Test2();
+        const patch = generatePatch(test);
+        expect(patch).toEqual([{
+            operation: "add",
+            path: "test",
+            value: {
+                foo: 'foo'
+            }
+        }]);
+
+        test.test.foo = "bar";
+
+        const patch2 = generatePatch(test);
+        expect(patch2).toEqual([{
+            operation: "modify",
+            path: "test",
+            patches: [
+                {
+                    operation: "add",
+                    path: "foo",
+                    value: "bar"
+                }
+            ]
+        }]);
+    });
+
+    it("should accept detaching objects in arrays", () => {
+        const json = {
+            tests: [{
+                foo: "string",
+            }],
+        };
+
+        const test = Test1.fromJson(json);
+        const test2 = test.tests[0];
+
+        test.tests[0] = undefined;
+        const patch = generatePatch(test);
+        expect(patch).toEqual([{
+            operation: "modify",
+            path: "tests",
+            patches: [
+                {
+                    operation: "remove",
+                    path: 0,
+                }
+            ]
+        }]);
+
+        (test2 as Test2).foo = "bar";
+
+        const patch2 = generatePatch(test);
+        expect(patch2).toEqual([]);
+    });
+
 });

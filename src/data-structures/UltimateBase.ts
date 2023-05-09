@@ -55,6 +55,7 @@ export class UltimateBase {
         console.log("Notify field set", field, value);
 
         this.__dirtyFields.add(field);
+        this.__dirtyChildFields.delete(field);
         // We need to notify the parent that a field has changed.
         if (this.parent !== undefined) {
             if (this.parent instanceof UltimateBase) {
@@ -86,6 +87,9 @@ export class UltimateBase {
         }
         this.parent = parent;
         this.parentProperty = parentProperty;
+
+        // From the moment we have a parent, we want to track changes
+        this._disableNotifications = false;
     }
 
     public __setParentArray(parent: UltimateArray<unknown> | undefined/*, positionInParentArray: number | undefined*/): void {
@@ -94,6 +98,9 @@ export class UltimateBase {
         }
         this.parent = parent;
         //this.positionInParentArray = positionInParentArray;
+
+        // From the moment we have a parent, we want to track changes
+        this._disableNotifications = false;
     }
 
     public __getPath(): string[] {
@@ -157,7 +164,9 @@ export class UltimateBase {
     }
 
     public __notifyChildSet(field: string) {
-        this.__dirtyChildFields.add(field);
+        if (!this.__dirtyFields.has(field)) {
+            this.__dirtyChildFields.add(field);
+        }
         if (this.parent !== undefined) {
             if (this.parent instanceof UltimateBase) {
                 this.parent.__notifyChildSet(this.parentProperty!);

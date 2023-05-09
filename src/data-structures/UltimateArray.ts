@@ -67,6 +67,12 @@ export class UltimateArray<V> extends Array<V> {
 
                 const isNumber = /^\d+$/.test(key.toString());
                 if (isNumber) {
+                    if (this.field.type === "object" || this.field.type === "array" || this.field.type === "map") {
+                        const oldValue = target[key];
+                        if (oldValue instanceof UltimateBase || oldValue instanceof UltimateArray) {
+                            oldValue.__setParent(undefined, undefined);
+                        }
+                    }
                     this.handleItem(value, Number(key));
                 }
                 const result = Reflect.set(target, key, value);
