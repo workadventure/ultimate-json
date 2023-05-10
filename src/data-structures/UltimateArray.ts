@@ -37,7 +37,7 @@ export class UltimateArray<V> extends Array<V> {
     private __dirtyChildFields: Set<V> = new Set<V>();
 
     public getDirtyFields(cleanFields = false): Set<number> {
-        let dirtyFields = this.__dirtyFields;
+        const dirtyFields = this.__dirtyFields;
         if (cleanFields) {
             this.__dirtyFields = new Set<number>();
         }
@@ -53,7 +53,7 @@ export class UltimateArray<V> extends Array<V> {
 
     private createHandler(): ProxyHandler<UltimateArray<V>> {
         return {
-            set: (target: UltimateArray<V>, key: string | symbol, value: any): boolean => {
+            set: (target: UltimateArray<V>, key: string | symbol, value: unknown): boolean => {
                 if (key === "length") {
                     // Special case: if we set the length to a value lower than the current length, we need to do is if items are deleted.
                     const oldLength = this.length;
@@ -61,6 +61,9 @@ export class UltimateArray<V> extends Array<V> {
                         for (let i = value; i < oldLength; i++) {
                             this.deleteSubject.next(i);
                         }
+                    }
+                    if (typeof value !== "number") {
+                        throw new Error("Array length must be a number.");
                     }
                     return Reflect.set(target, key, value);
                 }
@@ -71,6 +74,7 @@ export class UltimateArray<V> extends Array<V> {
                         const oldValue = target[key];
                         if (oldValue instanceof UltimateBase || oldValue instanceof UltimateArray) {
                             oldValue.__setParent(undefined, undefined);
+                            this.reverseMap.delete(oldValue);
                         }
                     }
                     this.handleItem(value, Number(key));
@@ -86,7 +90,8 @@ export class UltimateArray<V> extends Array<V> {
             deleteProperty: (target: UltimateArray<V>, key: string | symbol): boolean => {
                 if (this.field.type === "object") {
                     const oldValue = Reflect.get(target, key);
-                    if (oldValue instanceof UltimateBase) {
+                    if (oldValue instanceof UltimateBase || oldValue instanceof UltimateArray) {
+                        oldValue.__setParent(undefined, undefined);
                         this.reverseMap.delete(oldValue as V);
                     }
                 } else if (this.field.type === "array") {
@@ -131,7 +136,7 @@ export class UltimateArray<V> extends Array<V> {
         let key = this.parentProperty ?? "";
         const offset = this.keyInParentMap ?? this.positionInParentArray;
         if (offset !== undefined) {
-            key = key + "[" + offset + "]"
+            key = key + "[" + offset + "]";
         }
         path.push(key);
         return path;
@@ -197,10 +202,10 @@ export class UltimateArray<V> extends Array<V> {
                 return item;
             }
             case "array": {
-                throw new Error('Not implemented yet');
+                throw new Error("Not implemented yet");
             }
             case "map": {
-                throw new Error('Not implemented yet');
+                throw new Error("Not implemented yet");
             }
             default: {
                 const _exhaustiveCheck: never = this.field;
@@ -234,7 +239,10 @@ export class UltimateArray<V> extends Array<V> {
     private notifyParent() {
         if (this.parent !== undefined) {
             if (this.parent instanceof UltimateBase) {
-                this.parent.__notifyChildSet(this.parentProperty!);
+                if (!this.parentProperty) {
+                    throw new Error("Missing parent property of parent object");
+                }
+                this.parent.__notifyChildSet(this.parentProperty);
             } else if (this.parent instanceof UltimateArray<unknown>) {
                 this.parent.__notifyChildSet(this);
             } else {

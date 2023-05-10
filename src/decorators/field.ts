@@ -5,22 +5,22 @@ import {UltimateArray} from "../data-structures/UltimateArray";
 
 
 export type Field = ScalarField | ArrayField | MapField | ObjectField;
-interface ScalarField {
+type ScalarField = {
     type: "scalar";
     zodType: ZodType|undefined;
 }
 
-interface ObjectField {
+type ObjectField = {
     type: "object";
     classObj: { new(): UltimateBase };
 }
 
-interface ArrayField {
+type ArrayField = {
     type: "array";
     subField: Field;
 }
 
-interface MapField {
+type MapField = {
     type: "map";
     subField: Field;
 }
@@ -40,7 +40,7 @@ export function field(zodType: ZodType|undefined) {
         // This way, when debugging or console.logging the object, we can see the value of properties.
         // We can do this with another "Object.defineProperty" call.
         let value : unknown;
-        console.log("COUCOU field", propertyKey, "target:", target.constructor.name)
+        console.log("COUCOU field", propertyKey, "target:", target.constructor.name);
 
         let fields = fieldsRegistry.get(target.constructor.name);
         if (fields === undefined) {
@@ -61,7 +61,7 @@ export function field(zodType: ZodType|undefined) {
                 console.log("TARGET NOT INSTANCE OF ULTIMATEBASE");
             }
             if (this._disableNotifications) {
-                console.log("Notifications disabled")
+                console.log("Notifications disabled");
 //                value = newVal;
 //                this["___"+propertyKey] = newVal;
                 Object.defineProperty(this, "___"+propertyKey, {
@@ -103,7 +103,7 @@ export function field(zodType: ZodType|undefined) {
             get: getter,
             set: setter
         });
-    }
+    };
     /*return function actualDecorator(originalMethod: any, context: ClassFieldDecoratorContext) =>  {
 
         const methodName = String(context.name);
@@ -121,7 +121,7 @@ export function object(classObj: { new(): UltimateBase }) {
     return function(target: UltimateBase, propertyKey: string) {
 
         //let value : UltimateBase | undefined;
-        console.log("COUCOU field", propertyKey, "target:", target.constructor.name)
+        console.log("COUCOU field", propertyKey, "target:", target.constructor.name);
 
         let fields = fieldsRegistry.get(target.constructor.name);
         if (fields === undefined) {
@@ -143,7 +143,7 @@ export function object(classObj: { new(): UltimateBase }) {
 
 
             if (this._disableNotifications) {
-                console.log("Notifications disabled")
+                console.log("Notifications disabled");
                 Object.defineProperty(this, "___"+propertyKey, {
                     "configurable": true,
                     "enumerable": true,
@@ -160,7 +160,7 @@ export function object(classObj: { new(): UltimateBase }) {
                 oldVal.__setParent(undefined, undefined);
             }
             if (newVal instanceof UltimateBase) {
-                console.log("setParent")
+                console.log("setParent");
                 newVal.__setParent(this, propertyKey);
             }
 
@@ -178,7 +178,7 @@ export function object(classObj: { new(): UltimateBase }) {
             get: getter,
             set: setter
         });
-    }
+    };
 }
 
 export function arrayOf(subType: { new(): UltimateBase }|ZodType|Field|undefined) {
@@ -189,12 +189,12 @@ export function arrayOf(subType: { new(): UltimateBase }|ZodType|Field|undefined
                 type: "scalar",
                 zodType: subType,
             };
-        } else if (typeof subType === 'function') {
+        } else if (typeof subType === "function") {
             // This is a constructor
             normalizedSubfield = {
                 type: "object",
                 classObj: subType,
-            }
+            };
         } else {
             normalizedSubfield = subType;
         }
@@ -222,7 +222,7 @@ export function arrayOf(subType: { new(): UltimateBase }|ZodType|Field|undefined
 
 
             if (this._disableNotifications) {
-                console.log("Notifications disabled")
+                console.log("Notifications disabled");
                 Object.defineProperty(this, "___"+propertyKey, {
                     "configurable": true,
                     "enumerable": true,
@@ -239,7 +239,7 @@ export function arrayOf(subType: { new(): UltimateBase }|ZodType|Field|undefined
                 oldVal.__setParent(undefined, undefined);
             }
             if (newVal instanceof UltimateBase) {
-                console.log("setParent")
+                console.log("setParent");
                 newVal.__setParent(this, propertyKey);
             }
 
@@ -257,5 +257,5 @@ export function arrayOf(subType: { new(): UltimateBase }|ZodType|Field|undefined
             get: getter,
             set: setter
         });
-    }
+    };
 }

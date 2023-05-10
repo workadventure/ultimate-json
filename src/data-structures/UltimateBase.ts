@@ -5,13 +5,13 @@ import {Observable, Subject} from "rxjs";
 import {UltimateUtils} from "./UltimateUtils";
 import {fieldsRegistry} from "../decorators/field";
 
-export interface PrototypeType<T> extends Function {
+export type PrototypeType<T> = {
     prototype: T;
-}
+} & Function
 
-export interface ConstructorFunctionType<T = any> extends PrototypeType<T> {
+export type ConstructorFunctionType<T = any> = {
     new (...args: any[]): T;
-}
+} & PrototypeType<T>
 
 export type ConstructorType<T = unknown, Static extends Record<string, any> = PrototypeType<T>> = (ConstructorFunctionType<T> | PrototypeType<T>) & {
     [Key in keyof Static]: Static[Key];
@@ -111,14 +111,14 @@ export class UltimateBase {
         let key = this.parentProperty ?? "";
         const offset = this.keyInParentMap ?? this.positionInParentArray;
         if (offset !== undefined) {
-            key = key + "[" + offset + "]"
+            key = key + "[" + offset + "]";
         }
         path.push(key);
         return path;
     }
 
     public getDirtyFields(cleanFields = false): Set<string> {
-        let dirtyFields = this.__dirtyFields;
+        const dirtyFields = this.__dirtyFields;
         if (cleanFields) {
             this.__dirtyFields = new Set<string>();
         }
@@ -140,7 +140,7 @@ export class UltimateBase {
         }
         for (const [fieldName, fieldDescriptor] of fields) {
             if (json[fieldName] !== undefined) {
-                let value = json[fieldName];
+                const value = json[fieldName];
 
                 instance[fieldName] = UltimateUtils.fromJsonItem(value, fieldDescriptor, instance, fieldName);
             }
@@ -184,7 +184,7 @@ export class UltimateBase {
      * @param cleanFields If true, the dirty fields are cleared.
      */
     public getDirtyChildFields(cleanFields = false): Set<string> {
-        let dirtyFields = this.__dirtyChildFields;
+        const dirtyFields = this.__dirtyChildFields;
         if (cleanFields) {
             this.__dirtyChildFields = new Set<string>();
         }

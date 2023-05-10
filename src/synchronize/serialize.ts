@@ -2,18 +2,18 @@ import {UltimateBase} from "../data-structures/UltimateBase";
 import {UltimateArray} from "../data-structures/UltimateArray";
 import {fieldsRegistry} from "../decorators/field";
 
-interface AddPatch {
+type AddPatch = {
     operation: "add";
     path: string|number;
     value?: unknown;
 }
 
-interface RemovePatch {
+type RemovePatch = {
     operation: "remove";
     path: string|number;
 }
 
-interface ModifyPatch {
+type ModifyPatch = {
     operation: "modify";
     path: string|number;
     patches: Patch[];
@@ -109,9 +109,10 @@ export function applyPatch(ultimateObj: UltimateBase|UltimateArray<unknown>, pat
             case "modify":
                 applyPatch(ultimateObj[patch.path], patch.patches);
                 break;
-            default:
+            default: {
                 const _exhaustiveCheck: never = patch;
                 throw new Error("Unknown patch type");
+            }
         }
     }
 }

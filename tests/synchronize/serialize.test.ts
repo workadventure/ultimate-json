@@ -245,7 +245,7 @@ describe("Serialize", () => {
             operation: "add",
             path: "test",
             value: {
-                foo: 'foo'
+                foo: "foo"
             }
         }]);
 
@@ -270,7 +270,7 @@ describe("Serialize", () => {
             operation: "add",
             path: "test",
             value: {
-                foo: 'foo'
+                foo: "foo"
             }
         }]);
 

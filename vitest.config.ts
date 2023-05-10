@@ -4,7 +4,7 @@ export default defineConfig({
     test: {
         coverage: {
             all: true,
-            reporter: ['text', 'html'],
+            reporter: ["text", "html"],
             include: ["src/*.ts", "src/**/*.ts"],
         },
     },
